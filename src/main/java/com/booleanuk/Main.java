@@ -12,3 +12,7 @@ public class Main {
         SpringApplication.run(Main.class, args);
     }
 }
+
+
+Caused by: org.springframework.beans.BeanInstantiationException:
+Failed to instantiate [com.booleanuk.OrderService.controllers.OrderController]: Constructor threw exception
