@@ -1,5 +1,9 @@
 # JAVA Cloud AWS - Day Five
 
+![alt text](screenshots/awsToolkit.png)
+
+![alt text](screenshots/endpoint.png)
+
 ## Commands to Set Up SQS, SNS, and EventBridge
 
 Note in Every command and URL being called there are fields that need to be replaced.
