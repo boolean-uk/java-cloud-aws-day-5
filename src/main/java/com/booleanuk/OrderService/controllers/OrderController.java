@@ -2,8 +2,10 @@ package com.booleanuk.OrderService.controllers;
 
 
 import com.booleanuk.OrderService.models.Order;
+import com.booleanuk.OrderService.repositories.OrderRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -20,6 +22,7 @@ import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest;
 import software.amazon.awssdk.services.sqs.model.Message;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 
+import java.lang.reflect.Type;
 import java.util.List;
 
 @RestController
@@ -33,15 +36,17 @@ public class OrderController {
     private String topicArn;
     private String eventBusName;
 
+    @Autowired
+    private OrderRepository repository;
+
     public OrderController() {
         this.sqsClient = SqsClient.builder().build();
         this.snsClient = SnsClient.builder().build();
         this.eventBridgeClient = EventBridgeClient.builder().build();
 
-        this.queueUrl = "";
-        this.topicArn = "";
-        this.eventBusName = "";
-
+        this.queueUrl = "https://sqs.eu-west-1.amazonaws.com/637423341661/leoWahlandtOrderQueue";
+        this.topicArn = "arn:aws:sns:eu-west-1:637423341661:leoWahlandtOrderCreatedTopic";
+        this.eventBusName = "leoWahlandtCustomEventBus";
         this.objectMapper = new ObjectMapper();
     }
 
@@ -56,9 +61,17 @@ public class OrderController {
         List<Message> messages = sqsClient.receiveMessage(receiveRequest).messages();
 
         for (Message message : messages) {
+            System.out.println("Inside message: " + message.body());
             try {
-                Order order = this.objectMapper.readValue(message.body(), Order.class);
+
+
+                String msgJson = this.objectMapper.readTree(message.body()).get("Message").asText();
+
+                Order order = this.objectMapper.readValue(msgJson, Order.class);
+                System.out.println(order);
+                System.out.println("Order: " + order);
                 this.processOrder(order);
+
 
                 DeleteMessageRequest deleteRequest = DeleteMessageRequest.builder()
                         .queueUrl(queueUrl)
@@ -67,9 +80,20 @@ public class OrderController {
 
                 sqsClient.deleteMessage(deleteRequest);
             } catch (JsonProcessingException e) {
+                System.out.println("Catcher");
 //                e.printStackTrace();
             }
         }
+
+        /*
+        aws sqs create-queue --queue-name leoWahlandtOrderQueue
+        aws sns subscribe --topic-arn arn:aws:sns:eu-west-1:637423341661:leoWahlandtOrderCreatedTopic --protocol sqs --notification-endpoint arn:aws:sqs:eu-west-1:637423341661:leoWahlandtOrderQueue
+        aws events create-event-bus --name leoWahlandtCustomEventBus --region eu-west-1
+        aws events put-rule --name leoWahlandtOrderProcessedRule --event-pattern '{"source": ["order.service"]}' --event-bus-name leoWahlandtCustomEventBus
+        aws sqs get-queue-attributes --queue-url https://sqs.eu-west-1.amazonaws.com/637423341661/leoWahlandtOrderQueue --attribute-name QueueArn --region eu-west-1
+        aws sns subscribe --topic-arn arn:aws:sns:eu-west-1:637423341661:leoWahlandtOrderCreatedTopic --protocol sqs --notification-endpoint arn:aws:sqs:eu-west-1:637423341661:leoWahlandtOrderQueue --region eu-west-1
+        aws sqs set-queue-attributes --queue-url https://sqs.eu-west-1.amazonaws.com/637423341661/leoWahlandtOrderQueue --attributes '{"Policy":"{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"*\"},\"Action\":\"SQS:SendMessage\",\"Resource\":\"arn:aws:sqs:eu-west-1:637423341661:leoWahlandtOrderQueue\",\"Condition\":{\"ArnEquals\":{\"aws:SourceArn\":\"arn:aws:sns:eu-west-1:637423341661:leoWahlandtOrderCreatedTopic\"}}}]}"}' --region eu-west-1
+         */
         String status = String.format("%d Orders have been processed", messages.size());
         return ResponseEntity.ok(status);
     }
@@ -107,6 +131,10 @@ public class OrderController {
     }
 
     private void processOrder(Order order) {
+        int updatedTotal = order.getAmount() * order.getQuantity();
+        order.setTotal(updatedTotal);
+        order.setProcessed(true);
+        this.repository.save(order);
         System.out.println(order.toString());
     }
 }
