@@ -2,6 +2,7 @@ package com.booleanuk.OrderService.controllers;
 
 
 import com.booleanuk.OrderService.models.Order;
+import com.booleanuk.OrderService.repositories.OrderRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,16 +34,19 @@ public class OrderController {
     private String topicArn;
     private String eventBusName;
 
-    public OrderController() {
+    private final OrderRepository repository;
+
+    public OrderController(OrderRepository repository) {
         this.sqsClient = SqsClient.builder().build();
         this.snsClient = SnsClient.builder().build();
         this.eventBridgeClient = EventBridgeClient.builder().build();
 
-        this.queueUrl = "";
-        this.topicArn = "";
-        this.eventBusName = "";
+        this.queueUrl = "https://sqs.eu-west-1.amazonaws.com/637423341661/tuvaeaOrderQueue";
+        this.topicArn = "arn:aws:sns:eu-west-1:637423341661:tuvaeaOrderCreatedTopic";
+        this.eventBusName = "tuvaeaCustomEventBus";
 
         this.objectMapper = new ObjectMapper();
+        this.repository = repository;
     }
 
     @GetMapping
@@ -57,7 +61,8 @@ public class OrderController {
 
         for (Message message : messages) {
             try {
-                Order order = this.objectMapper.readValue(message.body(), Order.class);
+                String msg = this.objectMapper.readTree(message.body()).get("Message").asText();
+                Order order = this.objectMapper.readValue(msg, Order.class);
                 this.processOrder(order);
 
                 DeleteMessageRequest deleteRequest = DeleteMessageRequest.builder()
@@ -67,7 +72,7 @@ public class OrderController {
 
                 sqsClient.deleteMessage(deleteRequest);
             } catch (JsonProcessingException e) {
-//                e.printStackTrace();
+                e.printStackTrace();
             }
         }
         String status = String.format("%d Orders have been processed", messages.size());
@@ -77,7 +82,8 @@ public class OrderController {
     @PostMapping
     public ResponseEntity<String> createOrder(@RequestBody Order order) {
         try {
-            String orderJson = objectMapper.writeValueAsString(order);
+            Order savedOrder = repository.save(order);
+            String orderJson = objectMapper.writeValueAsString(savedOrder);
             System.out.println(orderJson);
             PublishRequest publishRequest = PublishRequest.builder()
                     .topicArn(topicArn)
@@ -107,6 +113,16 @@ public class OrderController {
     }
 
     private void processOrder(Order order) {
-        System.out.println(order.toString());
+        int total = order.getQuantity() * order.getAmount();
+        order.setTotal(total);
+        order.setProcessed(true);
+
+        Order orderToUpdate = this.repository.findById(order.getId()).orElse(null);
+        if (orderToUpdate != null) {
+            orderToUpdate.setProcessed(true);
+            orderToUpdate.setTotal(total);
+            this.repository.save(orderToUpdate);
+        }
+
     }
 }

@@ -1,5 +1,6 @@
 package com.booleanuk.OrderService.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,6 +13,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Entity
 @Table(name = "orders")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

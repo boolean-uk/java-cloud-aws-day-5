@@ -1,0 +1,8 @@
+aws sns create-topic --name tuvaeaOrderCreatedTopic
+aws sqs create-queue --queue-name tuvaeaOrderQueue
+aws sns subscribe --topic-arn arn:aws:sns:eu-west-1:637423341661:tuvaeaOrderCreatedTopic --protocol sqs --notification-endpoint arn:aws:sqs:eu-west-1:637423341661:tuvaeaOrderQueue
+aws events create-event-bus --name tuvaeaCustomEventBus --region eu-west-1
+aws events put-rule --name tuvaeaOrderProcessedRule --event-pattern '{"source": ["order.service"]}' --event-bus-name tuvaeaCustomEventBus
+aws sqs get-queue-attributes --queue-url https://sqs.eu-west-1.amazonaws.com/637423341661/tuvaeaOrderQueue --attribute-name QueueArn --region eu-west-1
+aws sns subscribe --topic-arn arn:aws:sns:eu-west-1:637423341661:tuvaeaOrderCreatedTopic --protocol sqs --notification-endpoint arn:aws:sqs:eu-west-1:637423341661:tuvaeaOrderQueue --region eu-west-1
+aws sqs set-queue-attributes --queue-url https://sqs.eu-west-1.amazonaws.com/637423341661/tuvaeaOrderQueue --attributes '{"Policy":"{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"*\"},\"Action\":\"SQS:SendMessage\",\"Resource\":\"arn:aws:sqs:eu-west-1:637423341661:tuvaeaOrderQueue\",\"Condition\":{\"ArnEquals\":{\"aws:SourceArn\":\"arn:aws:sns:eu-west-1:637423341661:tuvaeaOrderCreatedTopic\"}}}]}"}' --region eu-west-1
