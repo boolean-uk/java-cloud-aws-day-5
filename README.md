@@ -82,3 +82,13 @@ It works to an extent but there are limits and bugs, for instance it doensn't in
 2. Process orders and update the Total amount from QTY * AMOUNT plus
 3. Add code to make it possible to update the existing orders in the database and remove the processed ones from the message queue
 4. Improve the code in other ways
+
+
+# Submission
+1. Run commands as described in READ.md.
+2. Added neondb as database connection.
+3. Run the Main file.
+4. Used insomnia to add one order:  
+![](images/1_addOrderInsomnia.png)  
+5. Used AWS Toolkit in IntelliJ to see the message in the OrderQueue:  
+![](images/1_message_with_AWSToolkit_intelliJ.png)
