@@ -38,9 +38,9 @@ public class OrderController {
         this.snsClient = SnsClient.builder().build();
         this.eventBridgeClient = EventBridgeClient.builder().build();
 
-        this.queueUrl = "";
-        this.topicArn = "";
-        this.eventBusName = "";
+        this.queueUrl = "https://sqs.eu-west-1.amazonaws.com/637423341661/IrisFlystamOrderQueue";
+        this.topicArn = "arn:aws:sns:eu-west-1:637423341661:IrisFlystamOrderCreatedTopic";
+        this.eventBusName = "arn:aws:events:eu-west-1:637423341661:event-bus/IrisFlystamCustomEventBus";
 
         this.objectMapper = new ObjectMapper();
     }

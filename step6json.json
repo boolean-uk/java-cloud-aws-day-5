@@ -1,0 +1,3 @@
+{
+  "Policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"*\"},\"Action\":\"SQS:SendMessage\",\"Resource\":\"arn:aws:sqs:eu-west-1:637423341661:IrisFlystamOrderQueue\",\"Condition\":{\"ArnEquals\":{\"aws:SourceArn\":\"arn:aws:sns:eu-west-1:637423341661:IrisFlystamOrderCreatedTopic\"}}}]}"
+}
