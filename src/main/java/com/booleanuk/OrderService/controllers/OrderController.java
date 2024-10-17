@@ -33,14 +33,23 @@ public class OrderController {
     private String topicArn;
     private String eventBusName;
 
+    private String ruleArn;
+    private String queueArn;
+    private String subscriptionArn;
+
     public OrderController() {
         this.sqsClient = SqsClient.builder().build();
         this.snsClient = SnsClient.builder().build();
         this.eventBridgeClient = EventBridgeClient.builder().build();
 
-        this.queueUrl = "";
-        this.topicArn = "";
-        this.eventBusName = "";
+        this.queueUrl = "https://sqs.eu-west-1.amazonaws.com/637423341661/stian96OrderQueue";
+        this.topicArn = "arn:aws:sns:eu-west-1:637423341661:stian96OrderCreatedTopic";
+        this.eventBusName = "arn:aws:events:eu-west-1:637423341661:event-bus/stian96CustomEventBus";
+
+        // Possibly don't need these.
+        this.ruleArn = "arn:aws:events:eu-west-1:637423341661:rule/stian96CustomEventBus/stian96OrderProcessedRule";
+        this.queueArn = "arn:aws:sqs:eu-west-1:637423341661:stian96OrderQueue";
+        this.subscriptionArn = "arn:aws:sns:eu-west-1:637423341661:stian96OrderCreatedTopic:c13f6ffa-43f7-4f5c-bd6e-0566cb11cbd5";
 
         this.objectMapper = new ObjectMapper();
     }
