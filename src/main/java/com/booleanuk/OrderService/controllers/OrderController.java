@@ -4,6 +4,7 @@ package com.booleanuk.OrderService.controllers;
 import com.booleanuk.OrderService.models.Order;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -33,14 +34,16 @@ public class OrderController {
     private String topicArn;
     private String eventBusName;
 
+    @Autowired
     public OrderController() {
         this.sqsClient = SqsClient.builder().build();
         this.snsClient = SnsClient.builder().build();
         this.eventBridgeClient = EventBridgeClient.builder().build();
 
-        this.queueUrl = "";
-        this.topicArn = "";
-        this.eventBusName = "";
+        this.queueUrl = "https://sqs.eu-west-1.amazonaws.com/637423341661/uthmelOrderQueue";
+        this.topicArn = "arn:aws:sns:eu-west-1:637423341661:uthmelOrderCreatedTopic";
+        this.eventBusName = "uthmelCustomEventBus";
+
 
         this.objectMapper = new ObjectMapper();
     }
