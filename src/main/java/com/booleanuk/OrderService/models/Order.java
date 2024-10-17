@@ -32,11 +32,12 @@ public class Order {
         this.id = id;
     }
 
-    public Order(String product, int quantity, int amount, boolean processed, int total) {
+    public Order(String product, int quantity, int amount, boolean processed) {
         this.product = product;
         this.quantity = quantity;
         this.amount = amount;
         this.processed = processed;
-        this.total = total;
+        this.total = quantity * amount;
     }
+
 }
